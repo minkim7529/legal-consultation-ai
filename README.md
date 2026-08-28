@@ -1,28 +1,29 @@
 # 법률상담 AI (The Legal Consultation AI)
 
-Llama 3.1 8B를 LoRA로 파인튜닝해 만든 AI 법률상담 시스템. 대구대학교 5인 팀
-(김지환, 김두한, **김민석**, 신영훈, 김희철) 졸업작품이며, 대구대학교 공학제
+Llama 3.1 8B를 LoRA로 파인튜닝해서 만든 법률상담 AI입니다. 대구대학교 5인 팀
+(김지환, 김두한, **김민석**, 신영훈, 김희철) 졸업작품이고, 대구대학교 공학제에서
 **최우수상**을 받았습니다.
 
-변호사 상담이 30분에 5~10만 원, 사건 선임에 최소 100만 원대가 드는 현실에서
-시간·비용 제약 없이 1차 법률 자문을 받을 수 있는 시스템을 목표로 했습니다.
+변호사 상담이 30분에 5~10만 원, 사건을 맡기면 최소 100만 원대가 드는 걸 보고,
+돈과 시간 부담 없이 1차 자문 정도는 받을 수 있는 시스템을 만들어보자고
+시작했습니다.
 
 ## 모델 구조
 
 ![Llama3.1 모델 구조](images/page-03.png)
 
-Transformer 기반 LLM — 토큰화 → 임베딩 → Self-Attention → Feedforward →
-Autoregressive Decoding 구조. Llama 2 7B, Mistral 7B, Gemma 7B와 비교 실험한
-결과(위 이미지 우측 그래프) Llama 3 8B가 지식·상식·추론 전 영역에서 가장
-균형 잡힌 성능을 보여 베이스 모델로 선택했습니다.
+Transformer 기반 LLM으로, 토큰화 → 임베딩 → Self-Attention → Feedforward →
+Autoregressive Decoding 순서로 동작합니다. Llama 2 7B, Mistral 7B, Gemma 7B와
+직접 비교해봤는데(위 이미지 오른쪽 그래프), Llama 3 8B가 지식·상식·추론 전
+영역에서 가장 균형 잡혀서 베이스 모델로 골랐습니다.
 
 ## LoRA 파인튜닝
 
 ![학습 구성 (LoRA)](images/page-04.png)
 
-전체 가중치 대신 저차원 행렬 A·B만 학습하는 LoRA로, 계산 복잡도와 메모리
-사용량을 크게 줄였습니다. 실제 학습 코드(`법률_데이터셋_학습.ipynb`)의
-핵심 부분입니다.
+전체 가중치를 다 학습하는 대신 저차원 행렬 A·B만 학습하는 LoRA를 썼습니다.
+계산량과 메모리를 크게 줄일 수 있었고요. 아래는 실제 학습 코드
+(`법률_데이터셋_학습.ipynb`)에서 핵심만 뽑은 부분입니다.
 
 ```python
 # 📌 2. Huggingface 로그인
@@ -98,14 +99,14 @@ TrainOutput(global_step=1671, training_loss=1.754338427120736,
 | **Epoch 2** | **채택 — 가장 안정적이고 명확한 출력** |
 | Epoch 3 | 과적합, 일부 응답 불안정 |
 
-학습률은 5e-5에서 점차 감소시키는 스케줄을 적용했고, 1.5e-5~2e-5 구간에서
-가장 안정적인 수렴을 보였습니다.
+학습률은 5e-5에서 점점 낮추는 스케줄을 썼고, 1.5e-5~2e-5 구간에서 제일
+안정적으로 수렴했습니다.
 
 ## 문장 정제 후처리
 
-작은 모델이 흔히 보이는 문제(같은 구절 반복, 완결되지 않은 문장으로 끝남)를
-`difflib.SequenceMatcher` 기반으로 후처리했습니다. 실제 배포 코드
-(`법률상담사이트_최종.ipynb`)의 함수들입니다.
+작은 모델에서 자주 나오는 문제들 — 같은 구절 반복, 문장이 끝맺음 없이
+끊기는 것 — 을 `difflib.SequenceMatcher`로 후처리했습니다. 실제 배포 코드
+(`법률상담사이트_최종.ipynb`)에 있는 함수들입니다.
 
 ```python
 from difflib import SequenceMatcher
@@ -168,8 +169,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 demo.launch(share=True)
 ```
 
-배포는 Colab에서 학습 → Google Drive에 LoRA 어댑터 업로드 → 별도 노트북에서
-어댑터를 불러와 Gradio로 서빙하는 흐름입니다(`사용설명서.txt` 참고).
+Colab에서 학습하고, LoRA 어댑터를 Google Drive에 올린 다음, 별도 노트북에서
+그 어댑터를 불러와 Gradio로 서빙하는 흐름으로 배포했습니다 (`사용설명서.txt`에
+순서를 정리해뒀습니다).
 
 ## 파일
 
@@ -187,20 +189,20 @@ demo.launch(share=True)
 
 ## 한계 (논문에서 직접 밝힌 내용)
 
-8B 규모 모델과 5만여 건 데이터로는 상용 대형 챗봇 수준의 문장 완성도에는
-못 미치며, 학습 데이터가 민사법 위주라 형사·행정·가사 분야는 다루지
-못합니다. 결과는 참고용이며 실제 법적 판단이나 소송 대리를 대체하지
-않습니다.
+8B 모델에 5만여 건 데이터로는 상용 대형 챗봇만큼 문장이 매끄럽진 않고,
+학습 데이터가 민사법 위주라 형사·행정·가사는 다루지 못합니다. 결과는
+참고용이고, 실제 법적 판단이나 소송 대리를 대신할 수 없습니다.
 
 ## 용량 문제로 전체를 올리지 않은 것
 
 - **학습 데이터셋 전체** (`reformatted_law_dataset_cleaned_final.jsonl`, 약 75MB,
-  56,358행) — 위 40행 샘플로 대체. 원본은 Hugging Face에 공개된 한국어 법률
-  질문-답변 코퍼스를 정제한 것입니다.
+  56,358행) — 대신 위 40행 샘플만 올렸습니다. 원본은 Hugging Face에 공개된
+  한국어 법률 질문-답변 코퍼스를 정제해서 만들었습니다.
 - **학습된 LoRA 가중치** (`adapter_model.safetensors`, 약 27MB)와
-  **토크나이저 전체 파일**(`tokenizer.json`, 약 16MB) — 대신
-  `model-adapter-config/`에 `adapter_config.json`(LoRA rank/alpha 등 하이퍼파라미터),
-  `tokenizer_config.json`, `special_tokens_map.json`만 포함했습니다.
+  **토크나이저 전체 파일**(`tokenizer.json`, 약 16MB)은 빼고,
+  `model-adapter-config/`에 `adapter_config.json`(LoRA rank/alpha 등
+  하이퍼파라미터), `tokenizer_config.json`, `special_tokens_map.json`만
+  넣어뒀습니다.
 
 ## 공동 저자
 
