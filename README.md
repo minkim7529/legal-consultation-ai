@@ -144,9 +144,6 @@ def truncate_incomplete_sentences(text):
 
 ## Gradio 배포
 
-![시연 화면](images/page-06.png)
-![AI 변호사 UI 목업](images/ai-lawyer-ui-mockup.png)
-
 ```python
 def law_consultation_gpt(user_message, chat_history):
     prompt = f"[사용자]: {user_message}\n[AI 법률상담사]:"
@@ -206,4 +203,4 @@ Colab에서 학습하고, LoRA 어댑터를 Google Drive에 올린 다음, 별�
 
 ## 공동 저자
 
-김지환, 김두한, **김민석**, 신영훈, 김희철 — 대구대학교 5인 팀 프로젝트.
+김지환, 김두한, **김민석**, 신영훈 — 대구대학교 4인 팀 프로젝트.
